@@ -4,7 +4,7 @@ import cors from 'cors';
 import { WebSocketServer } from 'ws';
 import http from 'http';
 import { Scanner } from './scanner.js';
-import { getTimeSeries } from './twelveData.js';
+import { getTimeSeries } from './marketData.js';
 import { parseTimeSeries } from './indicators.js';
 
 const app = express();

@@ -1,4 +1,4 @@
-import { getTimeSeries } from './twelveData.js';
+import { getTimeSeries } from './marketData.js';
 import { parseTimeSeries } from './indicators.js';
 import { runStrategies, STRATEGIES } from './strategies/index.js';
 import { generateCommentary } from './commentary.js';
