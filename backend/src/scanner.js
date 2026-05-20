@@ -70,7 +70,7 @@ export class Scanner {
       this.cursor++;
       this.stats.scans++;
       await this.scanSymbol(symbol);
-      await new Promise(r => setTimeout(r, intervalMs / Math.max(1, Math.floor(60000 / intervalMs))));
+      await new Promise(r => setTimeout(r, intervalMs));
     }
   }
 
