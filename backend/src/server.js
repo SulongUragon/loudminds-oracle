@@ -20,6 +20,13 @@ const MAX_ALERTS = 200;
 const scanner = new Scanner({
   watchlist,
   onAlert: (alert) => {
+    if (alert._update) {
+      // Commentary arrived — patch existing alert in buffer and broadcast update
+      const idx = recentAlerts.findIndex(a => a.id === alert.id);
+      if (idx !== -1) recentAlerts[idx] = alert;
+      broadcast({ type: 'alert_update', data: alert });
+      return;
+    }
     recentAlerts.unshift(alert);
     if (recentAlerts.length > MAX_ALERTS) recentAlerts.pop();
     broadcast({ type: 'alert', data: alert });
