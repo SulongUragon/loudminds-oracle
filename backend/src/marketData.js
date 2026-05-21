@@ -40,7 +40,10 @@ export async function getTimeSeries(symbol, interval = '5min', outputsize = 50) 
   const from = to - 5 * 24 * 60 * 60;
 
   const data = await call('stock/candle', { symbol, resolution, from, to });
-  if (data.s !== 'ok') throw new Error(`No data for ${symbol} (${data.s})`);
+  if (data.s !== 'ok') {
+    console.error(`[finnhub raw] ${symbol}:`, JSON.stringify(data));
+    throw new Error(`No data for ${symbol} (${data.s})`);
+  }
   return { ...data, _outputsize: outputsize };
 }
 
