@@ -24,9 +24,11 @@ async function call(endpoint, params) {
   await limiter.wait();
   const url = new URL(`${BASE}/${endpoint}`);
   Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
-  url.searchParams.set('token', process.env.FINNHUB_API_KEY);
 
-  const res = await fetch(url.toString());
+  const token = (process.env.FINNHUB_API_KEY || '').trim();
+  const res = await fetch(url.toString(), {
+    headers: { 'X-Finnhub-Token': token },
+  });
   const data = await res.json();
   return data;
 }
