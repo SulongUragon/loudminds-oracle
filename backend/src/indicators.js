@@ -72,17 +72,8 @@ export function rvol(candles, lookback = 20) {
 }
 
 export function parseTimeSeries(data) {
-  // Finnhub format: { c, h, l, o, t, v, s, _outputsize }
-  if (!data.c || !data.t) return [];
+  // Yahoo Finance format: { _quotes: [...], _outputsize }
+  if (!data._quotes?.length) return [];
   const outputsize = data._outputsize || 50;
-  const candles = data.t.map((time, i) => ({
-    time: new Date(time * 1000).toISOString().slice(0, 16).replace('T', ' '),
-    open: data.o[i],
-    high: data.h[i],
-    low: data.l[i],
-    close: data.c[i],
-    volume: data.v[i] || 0,
-  }));
-  // Finnhub returns oldest-first; take the last N candles
-  return candles.slice(-outputsize);
+  return data._quotes.slice(-outputsize);
 }
