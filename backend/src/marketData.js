@@ -1,18 +1,13 @@
-import yahooFinance from 'yahoo-finance2';
+import YahooFinance from 'yahoo-finance2';
 
-// Yahoo Finance: free, no API key, full OHLCV history
-// Suppress noisy validation warnings
-yahooFinance.setGlobalConfig({ validation: { logErrors: false } });
-
+const yf = new YahooFinance();
 const INTERVAL_MAP = { '1min': '1m', '5min': '5m', '15min': '15m', '30min': '30m', '1h': '60m' };
 
 export async function getTimeSeries(symbol, interval = '5min', outputsize = 50) {
   const yhInterval = INTERVAL_MAP[interval] || '5m';
-  const result = await yahooFinance.chart(symbol, {
-    interval: yhInterval,
-    range: '5d',
-  });
+  const period1 = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000);
 
+  const result = await yf.chart(symbol, { interval: yhInterval, period1 });
   if (!result?.quotes?.length) throw new Error(`No data for ${symbol}`);
 
   const candles = result.quotes
@@ -30,10 +25,10 @@ export async function getTimeSeries(symbol, interval = '5min', outputsize = 50) 
 }
 
 export async function getQuote(symbol) {
-  return yahooFinance.quote(symbol);
+  return yf.quote(symbol);
 }
 
 export async function getQuotes(symbols) {
-  const results = await Promise.all(symbols.map(s => yahooFinance.quote(s)));
+  const results = await Promise.all(symbols.map(s => yf.quote(s)));
   return Object.fromEntries(symbols.map((s, i) => [s, results[i]]));
 }
