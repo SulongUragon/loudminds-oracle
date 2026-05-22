@@ -11,6 +11,7 @@ export class Scanner {
     this.onTick = onTick;
     this.candleCache = new Map(); // symbol -> { candles, lastFetch }
     this.recentAlerts = new Map(); // symbol -> timestamp (dedupe)
+    this.failCount = new Map(); // symbol -> consecutive error count
     this.activeStrategies = ['oracle'];
     this.cursor = 0;
     this.running = false;
@@ -65,7 +66,10 @@ export class Scanner {
       }
     } catch (err) {
       this.stats.errors++;
-      console.error(`[scan ${symbol}]`, err.message);
+      const fails = (this.failCount.get(symbol) || 0) + 1;
+      this.failCount.set(symbol, fails);
+      if (fails <= 3) console.error(`[scan ${symbol}]`, err.message);
+      if (fails === 3) console.warn(`[skip ${symbol}] repeatedly failing, suppressing further logs`);
     }
   }
 
