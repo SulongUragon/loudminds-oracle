@@ -21,8 +21,23 @@ export async function getAccount() {
   return api('GET', '/account');
 }
 
+async function hasOpenPosition(symbol) {
+  try {
+    const pos = await api('GET', `/positions/${symbol}`);
+    return !!pos.symbol;
+  } catch {
+    return false;
+  }
+}
+
 export async function placeBracketOrder(alert) {
   if (!process.env.ALPACA_KEY || !process.env.ALPACA_SECRET) return;
+
+  // Skip if already have an open position in this symbol
+  if (await hasOpenPosition(alert.symbol)) {
+    console.log(`[alpaca] skipping ${alert.symbol} — already have open position`);
+    return;
+  }
 
   const account = await getAccount();
   const buyingPower = parseFloat(account.buying_power || 0);
