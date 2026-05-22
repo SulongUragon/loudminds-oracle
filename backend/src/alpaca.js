@@ -1,0 +1,64 @@
+const BASE = process.env.ALPACA_ENDPOINT || 'https://paper-api.alpaca.markets/v2';
+
+function headers() {
+  return {
+    'APCA-API-KEY-ID': (process.env.ALPACA_KEY || '').trim(),
+    'APCA-API-SECRET-KEY': (process.env.ALPACA_SECRET || '').trim(),
+    'Content-Type': 'application/json',
+  };
+}
+
+async function api(method, path, body) {
+  const res = await fetch(`${BASE}${path}`, {
+    method,
+    headers: headers(),
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  return res.json();
+}
+
+export async function getAccount() {
+  return api('GET', '/account');
+}
+
+export async function placeBracketOrder(alert) {
+  if (!process.env.ALPACA_KEY || !process.env.ALPACA_SECRET) return;
+
+  const account = await getAccount();
+  const buyingPower = parseFloat(account.buying_power || 0);
+  if (buyingPower < 10) {
+    console.warn('[alpaca] insufficient buying power:', buyingPower);
+    return;
+  }
+
+  // Risk $500 per trade (or 10% of buying power, whichever is lower)
+  const riskAmount = Math.min(500, buyingPower * 0.10);
+  const qty = Math.max(1, Math.floor(riskAmount / alert.entry));
+
+  const side = alert.side === 'LONG' ? 'buy' : 'sell';
+  const takeProfitPrice = parseFloat(alert.target.toFixed(2));
+  const stopLossPrice = parseFloat(alert.stop.toFixed(2));
+
+  const order = {
+    symbol: alert.symbol,
+    qty: String(qty),
+    side,
+    type: 'market',
+    time_in_force: 'day',
+    order_class: 'bracket',
+    take_profit: { limit_price: String(takeProfitPrice) },
+    stop_loss: { stop_price: String(stopLossPrice) },
+  };
+
+  try {
+    const result = await api('POST', '/orders', order);
+    if (result.id) {
+      console.log(`[alpaca] ${side.toUpperCase()} ${qty} ${alert.symbol} @ $${alert.entry} | stop $${stopLossPrice} | target $${takeProfitPrice} | order ${result.id}`);
+    } else {
+      console.error('[alpaca] order error:', JSON.stringify(result));
+    }
+    return result;
+  } catch (err) {
+    console.error('[alpaca] fetch error:', err.message);
+  }
+}

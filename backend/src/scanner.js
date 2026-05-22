@@ -3,6 +3,7 @@ import { parseTimeSeries } from './indicators.js';
 import { runStrategies, STRATEGIES } from './strategies/index.js';
 import { generateCommentary } from './commentary.js';
 import { sendAlert } from './telegram.js';
+import { placeBracketOrder } from './alpaca.js';
 
 export class Scanner {
   constructor({ watchlist, onAlert, onTick }) {
@@ -62,6 +63,7 @@ export class Scanner {
           if (commentary) alert.commentary = commentary;
           this.onAlert?.({ ...alert, _update: true });
           sendAlert(alert).catch(() => {});
+          placeBracketOrder(alert).catch(() => {});
         }).catch(() => {});
       }
     } catch (err) {
