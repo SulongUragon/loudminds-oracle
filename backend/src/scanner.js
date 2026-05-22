@@ -13,7 +13,7 @@ export class Scanner {
     this.candleCache = new Map(); // symbol -> { candles, lastFetch }
     this.recentAlerts = new Map(); // symbol -> timestamp (dedupe)
     this.failCount = new Map(); // symbol -> consecutive error count
-    this.activeStrategies = ['oracle'];
+    this.activeStrategies = ['oracle', 'pullback', 'gap', 'vwap'];
     this.cursor = 0;
     this.running = false;
     this.stats = { scans: 0, alerts: 0, errors: 0, startedAt: Date.now() };
