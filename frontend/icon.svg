@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="ball" cx="38%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#d4a843"/>
+      <stop offset="40%" stop-color="#b8932a"/>
+      <stop offset="100%" stop-color="#3a2a08"/>
+    </radialGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#d4a843" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#d4a843" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="clip">
+      <circle cx="256" cy="220" r="180"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" fill="#0a0a0a" rx="96"/>
+
+  <!-- Outer glow -->
+  <circle cx="256" cy="220" r="210" fill="url(#glow)"/>
+
+  <!-- Crystal ball -->
+  <circle cx="256" cy="220" r="180" fill="url(#ball)"/>
+
+  <!-- Inner dark overlay for depth -->
+  <circle cx="256" cy="220" r="180" fill="#0a0a0a" opacity="0.45"/>
+
+  <!-- Candlestick chart inside ball -->
+  <g clip-path="url(#clip)" opacity="0.95">
+    <!-- Candle 1 - bearish -->
+    <line x1="148" y1="175" x2="148" y2="285" stroke="#d4a843" stroke-width="3" opacity="0.5"/>
+    <rect x="138" y="210" width="20" height="50" fill="#ff3b3b" rx="2"/>
+
+    <!-- Candle 2 - bullish -->
+    <line x1="198" y1="160" x2="198" y2="280" stroke="#d4a843" stroke-width="3" opacity="0.5"/>
+    <rect x="188" y="185" width="20" height="70" fill="#1db954" rx="2"/>
+
+    <!-- Candle 3 - bearish -->
+    <line x1="248" y1="155" x2="248" y2="270" stroke="#d4a843" stroke-width="3" opacity="0.5"/>
+    <rect x="238" y="180" width="20" height="55" fill="#ff3b3b" rx="2"/>
+
+    <!-- Candle 4 - bullish big -->
+    <line x1="298" y1="130" x2="298" y2="265" stroke="#d4a843" stroke-width="3" opacity="0.5"/>
+    <rect x="288" y="155" width="20" height="85" fill="#1db954" rx="2"/>
+
+    <!-- Candle 5 - bullish -->
+    <line x1="348" y1="115" x2="348" y2="240" stroke="#d4a843" stroke-width="3" opacity="0.5"/>
+    <rect x="338" y="140" width="20" height="70" fill="#1db954" rx="2"/>
+  </g>
+
+  <!-- Ball shine -->
+  <ellipse cx="210" cy="165" rx="55" ry="30" fill="white" opacity="0.08" transform="rotate(-20 210 165)"/>
+
+  <!-- Ball border -->
+  <circle cx="256" cy="220" r="180" fill="none" stroke="#d4a843" stroke-width="2.5" opacity="0.6"/>
+
+  <!-- Stand base -->
+  <ellipse cx="256" cy="430" rx="100" ry="16" fill="#b8932a" opacity="0.3"/>
+  <rect x="230" y="398" width="52" height="34" rx="6" fill="#b8932a" opacity="0.5"/>
+  <ellipse cx="256" cy="400" rx="70" ry="10" fill="#b8932a" opacity="0.4"/>
+</svg>
