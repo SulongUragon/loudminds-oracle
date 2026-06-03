@@ -4,8 +4,9 @@ import cors from 'cors';
 import { WebSocketServer } from 'ws';
 import http from 'http';
 import { Scanner } from './scanner.js';
-import { getTimeSeries } from './marketData.js';
+import { getTimeSeries, getDailyHistory } from './marketData.js';
 import { parseTimeSeries } from './indicators.js';
+import { STRATEGIES } from './strategies/index.js';
 
 const app = express();
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
@@ -70,6 +71,72 @@ app.get('/api/candles/:symbol', async (req, res) => {
     if (cached.length) return res.json(cached);
     const ts = await getTimeSeries(req.params.symbol.toUpperCase(), req.query.interval || '5min', 100);
     res.json(parseTimeSeries(ts));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/backtest', async (req, res) => {
+  const symbol = (req.query.symbol || '').toUpperCase();
+  const stratKey = req.query.strategy || 'oracle';
+  const days = Math.min(365, Math.max(30, parseInt(req.query.days || '90', 10)));
+
+  if (!symbol) return res.status(400).json({ error: 'symbol required' });
+  const strat = STRATEGIES[stratKey];
+  if (!strat) return res.status(400).json({ error: 'unknown strategy' });
+
+  try {
+    const candles = await getDailyHistory(symbol, days);
+    const trades = [];
+    const MIN_LOOKBACK = 55;
+
+    for (let i = MIN_LOOKBACK; i < candles.length - 1; i++) {
+      const sig = strat.fn(candles.slice(0, i + 1));
+      if (!sig) continue;
+
+      let outcome = 'TIMEOUT';
+      let exitPrice = candles[Math.min(i + 5, candles.length - 1)].close;
+      let exitDate = candles[Math.min(i + 5, candles.length - 1)].time;
+
+      for (let j = i + 1; j < Math.min(i + 6, candles.length); j++) {
+        const c = candles[j];
+        const stopHit = sig.side === 'LONG' ? c.low <= sig.stop : c.high >= sig.stop;
+        const targetHit = sig.side === 'LONG' ? c.high >= sig.target : c.low <= sig.target;
+        if (stopHit) { outcome = 'LOSS'; exitPrice = sig.stop; exitDate = c.time; break; }
+        if (targetHit) { outcome = 'WIN'; exitPrice = sig.target; exitDate = c.time; break; }
+      }
+
+      const risk = Math.abs(sig.entry - sig.stop);
+      const pnl = sig.side === 'LONG' ? exitPrice - sig.entry : sig.entry - exitPrice;
+      trades.push({
+        date: candles[i].time,
+        symbol,
+        side: sig.side,
+        entry: +sig.entry.toFixed(2),
+        stop: +sig.stop.toFixed(2),
+        target: +sig.target.toFixed(2),
+        reason: sig.reason,
+        exitPrice: +exitPrice.toFixed(2),
+        exitDate,
+        outcome,
+        pnlR: risk > 0 ? +(pnl / risk).toFixed(2) : 0,
+      });
+      i += 3; // skip ahead to avoid signal clustering
+    }
+
+    const wins = trades.filter(t => t.outcome === 'WIN').length;
+    const losses = trades.filter(t => t.outcome === 'LOSS').length;
+    const totalPnlR = +trades.reduce((s, t) => s + t.pnlR, 0).toFixed(2);
+    res.json({
+      symbol, strategy: stratKey, strategyName: strat.name, days, trades,
+      summary: {
+        total: trades.length, wins, losses,
+        timeouts: trades.length - wins - losses,
+        winRate: trades.length ? Math.round((wins / trades.length) * 100) : 0,
+        totalPnlR,
+        avgPnlR: trades.length ? +(totalPnlR / trades.length).toFixed(2) : 0,
+      },
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
