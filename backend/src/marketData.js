@@ -33,14 +33,14 @@ export async function getQuotes(symbols) {
   return Object.fromEntries(symbols.map((s, i) => [s, results[i]]));
 }
 
-export async function getDailyHistory(symbol, days = 90) {
-  const period1 = new Date(Date.now() - (days + 60) * 24 * 60 * 60 * 1000);
-  const result = await yf.chart(symbol, { interval: '1d', period1 });
+export async function getHourlyHistory(symbol, days = 90) {
+  const period1 = new Date(Date.now() - (days + 14) * 24 * 60 * 60 * 1000);
+  const result = await yf.chart(symbol, { interval: '60m', period1 });
   if (!result?.quotes?.length) throw new Error(`No data for ${symbol}`);
   return result.quotes
     .filter(q => q.open != null && q.close != null)
     .map(q => ({
-      time: new Date(q.date).toISOString().slice(0, 10),
+      time: new Date(q.date).toISOString().slice(0, 16).replace('T', ' '),
       open: q.open,
       high: q.high,
       low: q.low,
