@@ -21,6 +21,14 @@ export async function getAccount() {
   return api('GET', '/account');
 }
 
+export async function getPositions() {
+  return api('GET', '/positions');
+}
+
+export async function getOrders() {
+  return api('GET', '/orders?status=open&limit=20');
+}
+
 async function hasOpenPosition(symbol) {
   try {
     const pos = await api('GET', `/positions/${symbol}`);

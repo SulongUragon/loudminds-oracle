@@ -7,6 +7,7 @@ import { Scanner } from './scanner.js';
 import { getTimeSeries, getHourlyHistory } from './marketData.js';
 import { parseTimeSeries } from './indicators.js';
 import { STRATEGIES } from './strategies/index.js';
+import { getAccount, getPositions, getOrders } from './alpaca.js';
 
 const app = express();
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
@@ -64,6 +65,14 @@ app.post('/api/strategies', (req, res) => {
 });
 
 app.get('/api/watchlist', (req, res) => res.json(watchlist));
+
+app.get('/api/positions', async (req, res) => {
+  try { res.json(await getPositions()); } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/account', async (req, res) => {
+  try { res.json(await getAccount()); } catch (e) { res.status(500).json({ error: e.message }); }
+});
 
 app.get('/api/candles/:symbol', async (req, res) => {
   try {
