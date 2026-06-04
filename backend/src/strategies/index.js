@@ -7,35 +7,39 @@ import { sma, ema, rsi, vwap, atr, rvol } from '../indicators.js';
 
 // 1. ORACLE-STYLE: Momentum breakout + volume spike
 export function oracleMomentum(candles) {
-  if (candles.length < 21) return null;
+  if (candles.length < 55) return null;
   const last = candles[candles.length - 1];
   const prev20 = candles.slice(-21, -1);
   const high20 = Math.max(...prev20.map(c => c.high));
   const low20 = Math.min(...prev20.map(c => c.low));
   const rv = rvol(candles, 20);
   const a = atr(candles, 14);
-  if (!rv || !a) return null;
+  const closes = candles.map(c => c.close);
+  const ema50 = ema(closes, 50);
+  if (!rv || !a || !ema50) return null;
 
-  // Long breakout
-  if (last.close > high20 && rv >= 2.0) {
+  const uptrend = last.close > ema50;
+
+  // Long breakout — only in uptrend
+  if (uptrend && last.close > high20 && rv >= 2.0) {
     return {
       side: 'LONG',
       entry: last.close,
       stop: +(last.close - a * 1.5).toFixed(2),
       target: +(last.close + a * 2).toFixed(2),
       confidence: Math.min(95, 60 + rv * 10),
-      reason: `Breakout > 20-bar high | RVOL ${rv.toFixed(2)}x | ATR ${a.toFixed(2)}`,
+      reason: `Breakout > 20-bar high | RVOL ${rv.toFixed(2)}x | ATR ${a.toFixed(2)} | EMA50 ✓`,
     };
   }
-  // Short breakdown
-  if (last.close < low20 && rv >= 2.0) {
+  // Short breakdown — only in downtrend
+  if (!uptrend && last.close < low20 && rv >= 2.0) {
     return {
       side: 'SHORT',
       entry: last.close,
       stop: +(last.close + a * 1.5).toFixed(2),
       target: +(last.close - a * 2).toFixed(2),
       confidence: Math.min(95, 60 + rv * 10),
-      reason: `Breakdown < 20-bar low | RVOL ${rv.toFixed(2)}x | ATR ${a.toFixed(2)}`,
+      reason: `Breakdown < 20-bar low | RVOL ${rv.toFixed(2)}x | ATR ${a.toFixed(2)} | EMA50 ✓`,
     };
   }
   return null;
