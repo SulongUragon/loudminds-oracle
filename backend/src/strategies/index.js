@@ -22,7 +22,7 @@ export function oracleMomentum(candles) {
       side: 'LONG',
       entry: last.close,
       stop: +(last.close - a * 1.5).toFixed(2),
-      target: +(last.close + a * 3).toFixed(2),
+      target: +(last.close + a * 2).toFixed(2),
       confidence: Math.min(95, 60 + rv * 10),
       reason: `Breakout > 20-bar high | RVOL ${rv.toFixed(2)}x | ATR ${a.toFixed(2)}`,
     };
@@ -33,7 +33,7 @@ export function oracleMomentum(candles) {
       side: 'SHORT',
       entry: last.close,
       stop: +(last.close + a * 1.5).toFixed(2),
-      target: +(last.close - a * 3).toFixed(2),
+      target: +(last.close - a * 2).toFixed(2),
       confidence: Math.min(95, 60 + rv * 10),
       reason: `Breakdown < 20-bar low | RVOL ${rv.toFixed(2)}x | ATR ${a.toFixed(2)}`,
     };
