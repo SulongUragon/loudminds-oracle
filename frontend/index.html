@@ -195,13 +195,14 @@
   .conf { color: var(--gold-bright); }
 
   /* CHART */
-  .chart-wrap { flex: 1; display: flex; flex-direction: column; background: var(--bg); }
+  .chart-wrap { flex: 1; display: flex; flex-direction: column; background: var(--bg); overflow: hidden; }
   .chart-header {
     padding: 14px 18px;
     border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
     gap: 16px;
+    flex-shrink: 0;
   }
   .chart-symbol {
     font-family: 'Bebas Neue', sans-serif;
@@ -213,7 +214,10 @@
   .chart-change { font-family: 'Space Mono', monospace; font-size: 12px; }
   .chart-change.up { color: var(--green); }
   .chart-change.down { color: var(--red); }
-  #chart { flex: 1; }
+  #chart { height: 45%; min-height: 160px; flex-shrink: 0; }
+
+  /* BACKTEST PANEL (inline center) */
+  .bt-panel { display: flex; flex-direction: column; flex: 1; overflow: hidden; background: var(--bg); }
 
   /* RIGHT PANEL - STATS + WATCHLIST */
   .stat-grid { padding: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -401,10 +405,6 @@
   <!-- TOP BAR -->
   <header class="topbar">
     <div class="logo">LOUDMINDS<span>·ORACLE</span></div>
-    <div class="tab-bar">
-      <button class="tab-btn active" id="tabLive">LIVE</button>
-      <button class="tab-btn" id="tabBacktest">BACKTEST</button>
-    </div>
     <div class="strategy-bar" id="strategyBar"></div>
     <div class="conn"><span class="dot" id="connDot"></span><span id="connText">CONNECTING</span></div>
   </header>
@@ -419,14 +419,54 @@
       </div>
     </section>
 
-    <!-- CENTER: CHART -->
+    <!-- CENTER: CHART + BACKTEST -->
     <section class="chart-wrap">
+      <!-- Chart (top half) -->
       <div class="chart-header">
         <div class="chart-symbol" id="chartSym">—</div>
         <div class="chart-price" id="chartPrice">$0.00</div>
         <div class="chart-change" id="chartChange"></div>
       </div>
       <div id="chart"></div>
+      <!-- Backtest (bottom half) -->
+      <div class="bt-panel">
+        <div class="panel-header" style="border-top:1px solid var(--border)">BACKTEST</div>
+        <div class="bt-form">
+          <input class="bt-input" id="btSymbol" type="text" placeholder="AAPL" maxlength="10" />
+          <select class="bt-select" id="btStrategy">
+            <option value="oracle">Oracle Momentum</option>
+            <option value="pullback">Pullback EMA20</option>
+            <option value="gap">Gap &amp; Go</option>
+            <option value="vwap">VWAP Reclaim</option>
+          </select>
+          <select class="bt-select" id="btDays">
+            <option value="60">60 days</option>
+            <option value="90" selected>90 days</option>
+            <option value="180">180 days</option>
+            <option value="365">1 year</option>
+          </select>
+          <button class="bt-run" id="btRun">▶ RUN</button>
+          <span class="bt-hint">Hourly · 2-day exit</span>
+        </div>
+        <div class="bt-summary" id="btSummary" style="display:none">
+          <div class="bt-stat"><div class="bt-stat-label">Trades</div><div class="bt-stat-val" id="btTotal">0</div></div>
+          <div class="bt-stat"><div class="bt-stat-label">Wins</div><div class="bt-stat-val green" id="btWins">0</div></div>
+          <div class="bt-stat"><div class="bt-stat-label">Losses</div><div class="bt-stat-val red" id="btLosses">0</div></div>
+          <div class="bt-stat"><div class="bt-stat-label">Win Rate</div><div class="bt-stat-val" id="btWinRate">0%</div></div>
+          <div class="bt-stat"><div class="bt-stat-label">Total R</div><div class="bt-stat-val" id="btTotalR">0R</div></div>
+          <div class="bt-stat"><div class="bt-stat-label">Avg R</div><div class="bt-stat-val" id="btAvgR">0R</div></div>
+        </div>
+        <div class="bt-table-wrap">
+          <div class="bt-msg" id="btMsg">Enter symbol → RUN</div>
+          <table class="bt-table" id="btTable" style="display:none">
+            <thead><tr>
+              <th>Date</th><th>Side</th><th>Entry</th><th>Stop</th><th>Target</th>
+              <th>Exit</th><th>Outcome</th><th>P&amp;L (R)</th>
+            </tr></thead>
+            <tbody id="btTbody"></tbody>
+          </table>
+        </div>
+      </div>
     </section>
 
     <!-- RIGHT: STATS + WATCHLIST -->
@@ -442,45 +482,6 @@
       <div class="watchlist-section" id="watchlist"></div>
     </section>
   </main>
-
-  <!-- BACKTEST VIEW -->
-  <div class="backtest-wrap" id="backtestWrap">
-    <div class="bt-form">
-      <input class="bt-input" id="btSymbol" type="text" placeholder="AAPL" maxlength="10" />
-      <select class="bt-select" id="btStrategy">
-        <option value="oracle">Oracle Momentum</option>
-        <option value="pullback">Pullback EMA20</option>
-        <option value="gap">Gap &amp; Go</option>
-        <option value="vwap">VWAP Reclaim</option>
-      </select>
-      <select class="bt-select" id="btDays">
-        <option value="60">60 days</option>
-        <option value="90" selected>90 days</option>
-        <option value="180">180 days</option>
-        <option value="365">1 year</option>
-      </select>
-      <button class="bt-run" id="btRun">▶ RUN</button>
-      <span class="bt-hint">Hourly candles · 2-day exit window</span>
-    </div>
-    <div class="bt-summary" id="btSummary" style="display:none">
-      <div class="bt-stat"><div class="bt-stat-label">Trades</div><div class="bt-stat-val" id="btTotal">0</div></div>
-      <div class="bt-stat"><div class="bt-stat-label">Wins</div><div class="bt-stat-val green" id="btWins">0</div></div>
-      <div class="bt-stat"><div class="bt-stat-label">Losses</div><div class="bt-stat-val red" id="btLosses">0</div></div>
-      <div class="bt-stat"><div class="bt-stat-label">Win Rate</div><div class="bt-stat-val" id="btWinRate">0%</div></div>
-      <div class="bt-stat"><div class="bt-stat-label">Total P&amp;L (R)</div><div class="bt-stat-val" id="btTotalR">0R</div></div>
-      <div class="bt-stat"><div class="bt-stat-label">Avg P&amp;L (R)</div><div class="bt-stat-val" id="btAvgR">0R</div></div>
-    </div>
-    <div class="bt-table-wrap">
-      <div class="bt-msg" id="btMsg">Enter a symbol and press RUN to backtest.</div>
-      <table class="bt-table" id="btTable" style="display:none">
-        <thead><tr>
-          <th>Date</th><th>Side</th><th>Entry</th><th>Stop</th><th>Target</th>
-          <th>Exit</th><th>Exit Date</th><th>Outcome</th><th>P&amp;L (R)</th><th>Reason</th>
-        </tr></thead>
-        <tbody id="btTbody"></tbody>
-      </table>
-    </div>
-  </div>
 
   <!-- BOTTOM -->
   <div class="copy-toast" id="copyToast"></div>
@@ -704,22 +705,6 @@ function connectWS() {
 }
 
 // ============ BACKTEST ============
-document.getElementById('tabLive').addEventListener('click', () => {
-  document.getElementById('tabLive').classList.add('active');
-  document.getElementById('tabBacktest').classList.remove('active');
-  document.querySelector('.main').style.display = '';
-  document.getElementById('backtestWrap').style.display = 'none';
-  document.getElementById('strategyBar').style.display = '';
-});
-
-document.getElementById('tabBacktest').addEventListener('click', () => {
-  document.getElementById('tabBacktest').classList.add('active');
-  document.getElementById('tabLive').classList.remove('active');
-  document.querySelector('.main').style.display = 'none';
-  document.getElementById('backtestWrap').style.display = 'flex';
-  document.getElementById('strategyBar').style.display = 'none';
-});
-
 document.getElementById('btRun').addEventListener('click', runBacktest);
 document.getElementById('btSymbol').addEventListener('keydown', e => { if (e.key === 'Enter') runBacktest(); });
 
@@ -783,10 +768,8 @@ function renderBacktest({ summary, trades }) {
       <td style="color:var(--red)">$${t.stop.toFixed(2)}</td>
       <td style="color:var(--green)">$${t.target.toFixed(2)}</td>
       <td>$${t.exitPrice.toFixed(2)}</td>
-      <td>${t.exitDate}</td>
       <td><span class="bt-outcome ${t.outcome}">${t.outcome}</span></td>
       <td style="color:${color};font-weight:700">${t.pnlR >= 0 ? '+' : ''}${t.pnlR}R</td>
-      <td style="color:var(--muted);max-width:220px;overflow:hidden;text-overflow:ellipsis">${t.reason}</td>
     </tr>`;
   }).join('');
 }
