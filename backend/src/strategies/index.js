@@ -18,6 +18,9 @@ export function oracleMomentum(candles) {
   const ema50 = ema(closes, 50);
   if (!rv || !a || !ema50) return null;
 
+  // Skip low-volatility stocks — ATR must be at least 0.5% of price
+  if (a / last.close < 0.005) return null;
+
   const uptrend = last.close > ema50;
 
   // Long breakout — only in uptrend
