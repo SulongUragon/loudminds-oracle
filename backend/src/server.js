@@ -96,13 +96,13 @@ app.get('/api/backtest', async (req, res) => {
 
   try {
     const allCandles = await get5minHistory(symbol, days);
-    // Filter to regular market hours only (9:30 AM – 4:00 PM ET)
+    // Filter to power hour only (9:30–11:00 AM ET) — highest volume, most reliable breakouts
     const candles = allCandles.filter(c => {
       const t = new Date(c.time.replace(' ', 'T') + 'Z');
-      const etHour = (t.getUTCHours() - 4 + 24) % 24; // rough ET offset (EDT)
+      const etHour = (t.getUTCHours() - 4 + 24) % 24;
       const etMin = t.getUTCMinutes();
       const mins = etHour * 60 + etMin;
-      return mins >= 570 && mins < 960; // 9:30=570, 16:00=960
+      return mins >= 570 && mins < 660; // 9:30=570, 11:00=660
     });
     const trades = [];
     const MIN_LOOKBACK = 55;
