@@ -95,15 +95,22 @@ app.get('/api/backtest', async (req, res) => {
   if (!strat) return res.status(400).json({ error: 'unknown strategy' });
 
   try {
-    const candles = await get5minHistory(symbol, days);
+    const allCandles = await get5minHistory(symbol, days);
+    // Filter to regular market hours only (9:30 AM – 4:00 PM ET)
+    const candles = allCandles.filter(c => {
+      const t = new Date(c.time.replace(' ', 'T') + 'Z');
+      const etHour = (t.getUTCHours() - 4 + 24) % 24; // rough ET offset (EDT)
+      const etMin = t.getUTCMinutes();
+      const mins = etHour * 60 + etMin;
+      return mins >= 570 && mins < 960; // 9:30=570, 16:00=960
+    });
     const trades = [];
     const MIN_LOOKBACK = 55;
-    const EXIT_BARS = 12; // ~1 hour on 5-min candles
+    const EXIT_BARS = 24; // ~2 hours on 5-min candles
 
     for (let i = MIN_LOOKBACK; i < candles.length - 1; i++) {
       const sig = strat.fn(candles.slice(0, i + 1));
-      if (!sig) continue;
-
+      if (!sig || sig.confidence < 70) continue;
       let outcome = 'TIMEOUT';
       let exitPrice = candles[Math.min(i + EXIT_BARS, candles.length - 1)].close;
       let exitDate = candles[Math.min(i + EXIT_BARS, candles.length - 1)].time;
@@ -131,7 +138,7 @@ app.get('/api/backtest', async (req, res) => {
         outcome,
         pnlR: risk > 0 ? +(pnl / risk).toFixed(2) : 0,
       });
-      i += 12; // skip ~1 hour to avoid signal clustering
+      i += 24; // skip ~2 hours to avoid signal clustering
     }
 
     const wins = trades.filter(t => t.outcome === 'WIN').length;
