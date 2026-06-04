@@ -33,9 +33,10 @@ export async function getQuotes(symbols) {
   return Object.fromEntries(symbols.map((s, i) => [s, results[i]]));
 }
 
-export async function getHourlyHistory(symbol, days = 90) {
-  const period1 = new Date(Date.now() - (days + 14) * 24 * 60 * 60 * 1000);
-  const result = await yf.chart(symbol, { interval: '60m', period1 });
+export async function get5minHistory(symbol, days = 55) {
+  const capped = Math.min(days, 55); // Yahoo Finance 5-min limit ~60 days
+  const period1 = new Date(Date.now() - capped * 24 * 60 * 60 * 1000);
+  const result = await yf.chart(symbol, { interval: '5m', period1 });
   if (!result?.quotes?.length) throw new Error(`No data for ${symbol}`);
   return result.quotes
     .filter(q => q.open != null && q.close != null)

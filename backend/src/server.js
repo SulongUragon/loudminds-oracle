@@ -4,7 +4,7 @@ import cors from 'cors';
 import { WebSocketServer } from 'ws';
 import http from 'http';
 import { Scanner } from './scanner.js';
-import { getTimeSeries, getHourlyHistory } from './marketData.js';
+import { getTimeSeries, get5minHistory } from './marketData.js';
 import { parseTimeSeries } from './indicators.js';
 import { STRATEGIES } from './strategies/index.js';
 import { getAccount, getPositions, getOrders } from './alpaca.js';
@@ -88,17 +88,17 @@ app.get('/api/candles/:symbol', async (req, res) => {
 app.get('/api/backtest', async (req, res) => {
   const symbol = (req.query.symbol || '').toUpperCase();
   const stratKey = req.query.strategy || 'oracle';
-  const days = Math.min(365, Math.max(30, parseInt(req.query.days || '90', 10)));
+  const days = Math.min(55, Math.max(7, parseInt(req.query.days || '30', 10)));
 
   if (!symbol) return res.status(400).json({ error: 'symbol required' });
   const strat = STRATEGIES[stratKey];
   if (!strat) return res.status(400).json({ error: 'unknown strategy' });
 
   try {
-    const candles = await getHourlyHistory(symbol, days);
+    const candles = await get5minHistory(symbol, days);
     const trades = [];
     const MIN_LOOKBACK = 55;
-    const EXIT_BARS = 16; // ~2 trading days on hourly
+    const EXIT_BARS = 12; // ~1 hour on 5-min candles
 
     for (let i = MIN_LOOKBACK; i < candles.length - 1; i++) {
       const sig = strat.fn(candles.slice(0, i + 1));
@@ -131,7 +131,7 @@ app.get('/api/backtest', async (req, res) => {
         outcome,
         pnlR: risk > 0 ? +(pnl / risk).toFixed(2) : 0,
       });
-      i += 16; // skip ~2 trading days to avoid signal clustering
+      i += 12; // skip ~1 hour to avoid signal clustering
     }
 
     const wins = trades.filter(t => t.outcome === 'WIN').length;
