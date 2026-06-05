@@ -16,16 +16,15 @@ export function oracleMomentum(candles) {
   const a = atr(candles, 14);
   const closes = candles.map(c => c.close);
   const ema50 = ema(closes, 50);
-  const r = rsi(closes, 14);
-  if (!rv || !a || !ema50 || r == null) return null;
+  if (!rv || !a || !ema50) return null;
 
   // Skip low-volatility stocks — ATR must be at least 0.5% of price
   if (a / last.close < 0.005) return null;
 
   const uptrend = last.close > ema50;
 
-  // Long breakout — only in uptrend, not extremely overbought
-  if (uptrend && last.close > high20 && rv >= 2.0 && r < 80) {
+  // Long breakout — only in uptrend
+  if (uptrend && last.close > high20 && rv >= 2.0) {
     return {
       side: 'LONG',
       entry: last.close,
@@ -35,8 +34,8 @@ export function oracleMomentum(candles) {
       reason: `Breakout > 20-bar high | RVOL ${rv.toFixed(2)}x | ATR ${a.toFixed(2)} | EMA50 ✓`,
     };
   }
-  // Short breakdown — only in downtrend, not oversold
-  if (!uptrend && last.close < low20 && rv >= 2.0 && r > 30) {
+  // Short breakdown — only in downtrend
+  if (!uptrend && last.close < low20 && rv >= 2.0) {
     return {
       side: 'SHORT',
       entry: last.close,
