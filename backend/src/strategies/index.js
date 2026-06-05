@@ -24,7 +24,7 @@ export function oracleMomentum(candles) {
   const uptrend = last.close > ema50;
 
   // Long breakout — only in uptrend
-  if (uptrend && last.close > high20 && rv >= 1.8) {
+  if (uptrend && last.close > high20 && rv >= 2.0) {
     return {
       side: 'LONG',
       entry: last.close,
@@ -35,7 +35,7 @@ export function oracleMomentum(candles) {
     };
   }
   // Short breakdown — only in downtrend
-  if (!uptrend && last.close < low20 && rv >= 1.8) {
+  if (!uptrend && last.close < low20 && rv >= 2.0) {
     return {
       side: 'SHORT',
       entry: last.close,
