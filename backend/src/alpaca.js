@@ -43,7 +43,9 @@ async function hasOpenPosition(symbol) {
 }
 
 export async function placeBracketOrder(alert) {
-  if (!process.env.ALPACA_KEY || !process.env.ALPACA_SECRET) return;
+  const key = process.env.ALPACA_API_KEY || process.env.ALPACA_KEY;
+  const secret = process.env.ALPACA_API_SECRET || process.env.ALPACA_SECRET;
+  if (!key || !secret) return;
 
   // Skip if already have an open position in this symbol
   if (await hasOpenPosition(alert.symbol)) {
