@@ -9,9 +9,9 @@ import { sma, ema, rsi, vwap, atr, rvol } from '../indicators.js';
 export function oracleMomentum(candles) {
   if (candles.length < 55) return null;
   const last = candles[candles.length - 1];
-  const prev20 = candles.slice(-21, -1);
-  const high20 = Math.max(...prev20.map(c => c.high));
-  const low20 = Math.min(...prev20.map(c => c.low));
+  const prev10 = candles.slice(-11, -1);
+  const high20 = Math.max(...prev10.map(c => c.high));
+  const low20 = Math.min(...prev10.map(c => c.low));
   const rv = rvol(candles, 20);
   const a = atr(candles, 14);
   const closes = candles.map(c => c.close);
