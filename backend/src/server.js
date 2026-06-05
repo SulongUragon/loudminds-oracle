@@ -106,7 +106,7 @@ app.get('/api/backtest', async (req, res) => {
     });
     const trades = [];
     const MIN_LOOKBACK = 55;
-    const EXIT_BARS = 24; // ~2 hours on 5-min candles
+    const EXIT_BARS = 36; // ~3 hours on 5-min candles
 
     for (let i = MIN_LOOKBACK; i < candles.length - 1; i++) {
       const sig = strat.fn(candles.slice(0, i + 1));
@@ -138,7 +138,7 @@ app.get('/api/backtest', async (req, res) => {
         outcome,
         pnlR: risk > 0 ? +(pnl / risk).toFixed(2) : 0,
       });
-      i += 24; // skip ~2 hours to avoid signal clustering
+      i += 36; // skip ~3 hours to avoid signal clustering
     }
 
     const wins = trades.filter(t => t.outcome === 'WIN').length;
