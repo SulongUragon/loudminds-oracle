@@ -14,7 +14,11 @@ async function api(method, path, body) {
     headers: headers(),
     body: body ? JSON.stringify(body) : undefined,
   });
-  return res.json();
+  if (!res.ok && res.status !== 200) {
+    console.error(`[alpaca] ${method} ${path} → HTTP ${res.status}`);
+  }
+  const text = await res.text();
+  try { return JSON.parse(text); } catch { return {}; }
 }
 
 export async function getAccount() {
