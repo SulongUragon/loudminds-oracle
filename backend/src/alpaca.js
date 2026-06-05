@@ -1,9 +1,9 @@
-const BASE = process.env.ALPACA_ENDPOINT || 'https://paper-api.alpaca.markets/v2';
+const BASE = process.env.ALPACA_BASE_URL || process.env.ALPACA_ENDPOINT || 'https://paper-api.alpaca.markets/v2';
 
 function headers() {
   return {
-    'APCA-API-KEY-ID': (process.env.ALPACA_KEY || '').trim(),
-    'APCA-API-SECRET-KEY': (process.env.ALPACA_SECRET || '').trim(),
+    'APCA-API-KEY-ID': (process.env.ALPACA_API_KEY || process.env.ALPACA_KEY || '').trim(),
+    'APCA-API-SECRET-KEY': (process.env.ALPACA_API_SECRET || process.env.ALPACA_SECRET || '').trim(),
     'Content-Type': 'application/json',
   };
 }
