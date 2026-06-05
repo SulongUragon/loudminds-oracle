@@ -57,13 +57,14 @@ export class Scanner {
           ...sig,
         };
         this.stats.alerts++;
-        // Generate AI commentary async — emit alert immediately, then push update + Telegram
         this.onAlert?.(alert);
+        // Fire order immediately — don't wait for commentary
+        placeBracketOrder(alert).catch(err => console.error('[alpaca] order failed:', err.message));
+        // Commentary is async and separate
         generateCommentary(alert, candles).then(commentary => {
           if (commentary) alert.commentary = commentary;
           this.onAlert?.({ ...alert, _update: true });
           sendAlert(alert).catch(() => {});
-          placeBracketOrder(alert).catch(() => {});
         }).catch(() => {});
       }
     } catch (err) {
