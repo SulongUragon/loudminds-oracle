@@ -24,8 +24,8 @@ export function oracleMomentum(candles) {
 
   const uptrend = last.close > ema50;
 
-  // Long breakout — only in uptrend, not overbought
-  if (uptrend && last.close > high20 && rv >= 2.0 && r < 70) {
+  // Long breakout — only in uptrend, not extremely overbought
+  if (uptrend && last.close > high20 && rv >= 2.0 && r < 80) {
     return {
       side: 'LONG',
       entry: last.close,
